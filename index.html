@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>McCoy's Fleet Update — YTD March 2026 vs 2025</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --green:        #1B4D2E;
+    --green-mid:    #255f39;
+    --green-light:  #2d7346;
+    --green-pale:   #eaf3ed;
+    --yellow:       #F5C300;
+    --yellow-dark:  #c9a000;
+    --yellow-pale:  #fef9e0;
+    --white:        #ffffff;
+    --gray-50:      #f4f5f2;
+    --gray-100:     #e8e9e4;
+    --gray-200:     #d0d2cb;
+    --gray-400:     #8f9185;
+    --gray-600:     #555750;
+    --gray-800:     #2c2e28;
+    --gray-900:     #1a1c18;
+    --positive:     #1B4D2E;
+    --positive-bg:  #eaf3ed;
+    --negative:     #b91c1c;
+    --negative-bg:  #fef2f2;
+    --warn:         #92400e;
+    --warn-bg:      #fffbeb;
+    --text:         #1a1c18;
+    --text-muted:   #555750;
+    --text-light:   #8f9185;
+    --border:       #d8dbd2;
+    --shadow:       0 1px 4px rgba(0,0,0,0.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--gray-50); color: var(--text); font-family: 'Barlow', sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; }
+
+  /* HEADER */
+  header { background: var(--green); color: var(--white); box-shadow: 0 3px 16px rgba(0,0,0,0.25); }
+  .header-top { display: flex; align-items: center; justify-content: space-between; padding: 18px 40px 14px; gap: 16px; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.12); }
+  .logo-area { display: flex; align-items: center; gap: 16px; }
+  .logo-badge { background: var(--yellow); color: var(--green); font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 20px; letter-spacing: 0.5px; padding: 7px 16px; border-radius: 4px; text-transform: uppercase; line-height: 1; white-space: nowrap; }
+  .header-divider { width: 1px; height: 38px; background: rgba(255,255,255,0.25); }
+  .header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 25px; font-weight: 800; letter-spacing: 0.3px; text-transform: uppercase; line-height: 1.1; }
+  .header-title span { color: var(--yellow); }
+  .header-sub { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 3px; }
+  .report-badge { background: var(--yellow); color: var(--green); font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 0.8px; text-transform: uppercase; padding: 7px 16px; border-radius: 4px; white-space: nowrap; }
+
+  /* TABS */
+  .nav-tabs { display: flex; padding: 6px 40px 0; }
+  .nav-tab { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: rgba(255,255,255,0.60); padding: 9px 20px; cursor: pointer; border: none; background: transparent; border-bottom: 3px solid transparent; transition: all 0.15s; }
+  .nav-tab:hover { color: var(--white); background: rgba(255,255,255,0.07); }
+  .nav-tab.active { color: var(--yellow); border-bottom-color: var(--yellow); background: rgba(245,195,0,0.08); }
+
+  /* MAIN */
+  main { padding: 28px 40px 60px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* KPI GRID */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .kpi-card { background: var(--white); border: 1px solid var(--border); border-radius: 6px; padding: 16px 18px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .kpi-card::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: var(--green); }
+  .kpi-card.yellow::after { background: var(--yellow); }
+  .kpi-card.warn::after   { background: #f59e0b; }
+  .kpi-label { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .kpi-value { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 800; line-height: 1; color: var(--gray-900); }
+  .kpi-delta { margin-top: 7px; font-size: 12px; font-weight: 600; }
+  .kpi-delta.pos  { color: var(--positive); }
+  .kpi-delta.neg  { color: var(--negative); }
+  .kpi-delta.warn { color: var(--warn); }
+  .kpi-delta .sub { color: var(--text-light); font-weight: 400; }
+
+  /* SECTION HEADERS */
+  .section-header { display: flex; align-items: center; gap: 12px; margin: 26px 0 14px; }
+  .section-header h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--green); white-space: nowrap; }
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+  .section-badge { font-size: 10px; font-weight: 800; letter-spacing: 0.5px; color: var(--green); text-transform: uppercase; background: var(--yellow-pale); border: 1px solid var(--yellow-dark); padding: 2px 10px; border-radius: 3px; white-space: nowrap; }
+
+  /* LAYOUT */
+  .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  @media (max-width: 900px) { .two-col, .three-col { grid-template-columns: 1fr; } }
+
+  /* PANELS */
+  .panel { background: var(--white); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; box-shadow: var(--shadow); }
+  .panel-header { background: var(--green); color: var(--white); padding: 10px 18px; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
+  .panel-header .sub { font-family: 'Barlow', sans-serif; font-size: 11px; color: rgba(255,255,255,0.55); text-transform: none; font-weight: 400; letter-spacing: 0; }
+  .panel-header .ytag { background: var(--yellow); color: var(--green); font-size: 11px; font-weight: 800; padding: 1px 8px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .panel-header .wtag { background: #f59e0b; color: #1c1917; font-size: 11px; font-weight: 800; padding: 1px 8px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .panel-body { padding: 18px; }
+
+  /* TABLES */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase; color: var(--text-muted); padding: 9px 12px; background: var(--gray-50); border-bottom: 2px solid var(--border); }
+  th.num { text-align: right; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--green-pale); }
+  .total-row td { font-weight: 700; background: var(--green) !important; color: var(--white) !important; border-top: 2px solid var(--green-mid); }
+  .total-row td.num { color: var(--yellow) !important; font-size: 15px; }
+  .total-row:hover td { background: var(--green) !important; }
+  .highlight-row td { background: var(--yellow-pale) !important; font-weight: 700; }
+  .highlight-row td.num { color: var(--green); font-size: 15px; font-weight: 800; }
+  .warn-row td { background: #fffbeb !important; }
+
+  .delta-pos  { color: var(--positive); font-weight: 600; }
+  .delta-neg  { color: var(--negative); font-weight: 600; }
+  .delta-warn { color: var(--warn); font-weight: 600; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; font-family: 'Barlow Condensed', sans-serif; }
+  .badge.pos  { background: var(--positive-bg); color: var(--positive); }
+  .badge.neg  { background: var(--negative-bg); color: var(--negative); }
+  .badge.warn { background: var(--warn-bg);     color: var(--warn); }
+  .badge.neu  { background: var(--gray-100);    color: var(--gray-600); }
+
+  /* CHARTS */
+  .chart-wrap { padding: 16px 20px; }
+  .chart-wrap canvas { max-height: 250px; }
+
+  /* PROGRESS BARS */
+  .prog-row { margin: 10px 0; }
+  .prog-label { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px; font-weight: 500; }
+  .prog-label .right { color: var(--text-muted); font-weight: 400; }
+  .prog-track { height: 8px; background: var(--gray-100); border-radius: 4px; overflow: hidden; }
+  .prog-fill        { height: 100%; border-radius: 4px; background: var(--green); transition: width 0.7s ease; }
+  .prog-fill.yellow { background: var(--yellow-dark); }
+  .prog-fill.light  { background: var(--green-light); }
+  .prog-fill.warn   { background: #f59e0b; }
+
+  /* CALLOUT */
+  .callout { background: var(--yellow-pale); border-left: 4px solid var(--yellow); border-radius: 0 4px 4px 0; padding: 10px 14px; font-size: 12px; color: var(--text-muted); margin-top: 12px; }
+  .callout strong { color: var(--green); }
+  .callout.alert { background: var(--negative-bg); border-left-color: var(--negative); }
+  .callout.alert strong { color: var(--negative); }
+
+  /* FOOTER */
+  footer { background: var(--green); border-top: 4px solid var(--yellow); padding: 14px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: rgba(255,255,255,0.55); letter-spacing: 0.3px; }
+  footer strong { color: var(--yellow); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo-area">
+      <div class="logo-badge">McCoy's</div>
+      <div class="header-divider"></div>
+      <div>
+        <div class="header-title"><span>Fleet</span> Spend Summary</div>
+        <div class="header-sub">YTD Comparison 2026 vs. 2025 &nbsp;·&nbsp; Through March &nbsp;·&nbsp; Source: FEXA WO Management System</div>
+      </div>
+    </div>
+    <div class="report-badge">Month 3 — March 2026</div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('dashboard',this)">Dashboard</button>
+    <button class="nav-tab" onclick="switchTab('expenses',this)">Fleet Expenses</button>
+    <button class="nav-tab" onclick="switchTab('fuel',this)">Fuel &amp; Miles</button>
+    <button class="nav-tab" onclick="switchTab('capex',this)">CAPEX &amp; Assets</button>
+    <button class="nav-tab" onclick="switchTab('history',this)">Historical Trends</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ====== DASHBOARD ====== -->
+<div class="tab-panel active" id="tab-dashboard">
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Fleet Expenses</div>
+      <div class="kpi-value">$4.208M</div>
+      <div class="kpi-delta pos">▼ $209,898 saved <span class="sub">vs 2025 ($4.418M)</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Fuel Spend</div>
+      <div class="kpi-value">$2.104M</div>
+      <div class="kpi-delta warn">▲ +$7,911 <span class="sub">nearly flat vs 2025 ($2.096M) ⚠</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Miles Driven (YTD)</div>
+      <div class="kpi-value">3,331,630</div>
+      <div class="kpi-delta pos">▼ 151,961 miles <span class="sub">(-4.4% YOY)</span></div>
+    </div>
+    <div class="kpi-card warn">
+      <div class="kpi-label">Maint. Cost Per Mile</div>
+      <div class="kpi-value">$0.449</div>
+      <div class="kpi-delta warn">▲ vs 2025 ($0.456) <span class="sub">still narrowing ⚠</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Tire Spend YTD</div>
+      <div class="kpi-value">$281,860</div>
+      <div class="kpi-delta pos">▼ $36,105 <span class="sub">(-11.4% YOY)</span></div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-label">Current Asset Count</div>
+      <div class="kpi-value">1,512</div>
+      <div class="kpi-delta neg">▼ vs 1,526 avg <span class="sub">(avg 2026: 1,514)</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Fuel Efficiency (MPG)</div>
+      <div class="kpi-value">6.81</div>
+      <div class="kpi-delta pos">▲ +1.5% <span class="sub">vs 2025 (6.71 MPG)</span></div>
+    </div>
+    <div class="kpi-card warn">
+      <div class="kpi-label">Avg. Fuel Cost / Gal</div>
+      <div class="kpi-value">$3.82</div>
+      <div class="kpi-delta warn">▲ +$0.55 <span class="sub">vs 2025 ($3.27) ⚠</span></div>
+    </div>
+  </div>
+
+  <!-- Fuel price alert -->
+  <div class="callout alert" style="margin-bottom:18px;">
+    <strong>⚠ Fuel Price Surge in March:</strong> Average cost per gallon jumped to $3.82 YTD vs $3.27 in 2025 (+$0.55). This is the primary driver behind fuel spend flipping from savings to roughly flat ($2.104M vs $2.096M). Fuel volume is actually down (489K vs 519K gallons, -5.8%), but the price increase erased those efficiency gains. Monitor closely in Q2.
+  </div>
+
+  <div class="section-header">
+    <h2>Expense Breakdown</h2>
+    <div class="section-line"></div>
+    <div class="section-badge">YTD March 2026 — Q1</div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">Fleet Expenses by Category <span class="sub">2026 YTD Q1</span></div>
+      <div class="chart-wrap"><canvas id="chartExpenses"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">2026 vs. 2025 — Top Spend Categories <span class="wtag">Watch: Fuel ↑</span></div>
+      <div class="panel-body" style="padding-top:14px;">
+        <div class="prog-row">
+          <div class="prog-label"><span>R&T — Forklift</span><span class="right">$1.218M vs $1.180M &nbsp;<strong class="delta-neg">+3.2%</strong></span></div>
+          <div class="prog-track"><div class="prog-fill warn" style="width:100%"></div></div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-label"><span>R&T — Truck</span><span class="right">$1.251M vs $1.318M &nbsp;<strong class="delta-pos">-5.1%</strong></span></div>
+          <div class="prog-track"><div class="prog-fill" style="width:95%"></div></div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-label"><span>Fuel — HD &amp; LD Vehicles</span><span class="right">$1.890M vs $1.850M &nbsp;<strong class="delta-neg">+2.2%</strong></span></div>
+          <div class="prog-track"><div class="prog-fill warn" style="width:100%"></div></div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-label"><span>Compliance &amp; Legalization</span><span class="right">$291K vs $342K &nbsp;<strong class="delta-pos">-15.0%</strong></span></div>
+          <div class="prog-track"><div class="prog-fill light" style="width:85%"></div></div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-label"><span>PM Truck</span><span class="right">$245K vs $270K &nbsp;<strong class="delta-pos">-9.1%</strong></span></div>
+          <div class="prog-track"><div class="prog-fill light" style="width:91%"></div></div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-label"><span>Banding &amp; Strapping</span><span class="right">$268K vs $288K &nbsp;<strong class="delta-pos">-6.8%</strong></span></div>
+          <div class="prog-track"><div class="prog-fill light" style="width:93%"></div></div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-label"><span>R&T — Trailer</span><span class="right">$355K vs $322K &nbsp;<strong class="delta-neg">+10.3%</strong></span></div>
+          <div class="prog-track"><div class="prog-fill warn" style="width:100%"></div></div>
+        </div>
+        <div class="callout">Bar = 2026 as % of 2025. <strong>Shorter = savings.</strong> Orange = over prior year. R&T Forklift, R&T Trailer, and Fuel have all flipped unfavorable by Q1 end.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">Depreciation — YTD Q1 Trend (2021–2026)</div>
+      <div class="chart-wrap"><canvas id="chartDeprec"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">Transaction Volume Summary</div>
+      <div style="padding:0;">
+        <table>
+          <thead>
+            <tr><th>Category</th><th class="num">2026 YTD</th><th class="num">2025 YTD</th><th class="num">Change</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Fleet Transactions</td><td class="num">3,076</td><td class="num">3,291</td><td class="num"><span class="badge neg">-215</span></td></tr>
+            <tr><td>Fleet — PM</td><td class="num">771</td><td class="num">893</td><td class="num"><span class="badge neg">-122</span></td></tr>
+            <tr><td>Fleet — CAPEX</td><td class="num">52</td><td class="num">121</td><td class="num"><span class="badge neg">-69</span></td></tr>
+            <tr class="total-row"><td>Total Transactions</td><td class="num">3,899</td><td class="num">4,305</td><td class="num">-406</td></tr>
+          </tbody>
+        </table>
+        <div style="padding:14px 16px 8px;">
+          <table style="font-size:12px;">
+            <thead><tr><th>Avg Charge / Transaction</th><th class="num">2026</th><th class="num">2025</th></tr></thead>
+            <tbody>
+              <tr><td>Fleet</td><td class="num">$1,902</td><td class="num">$1,779</td></tr>
+              <tr><td>Fleet — PM</td><td class="num">$569</td><td class="num">$517</td></tr>
+              <tr><td>Fleet — CAPEX</td><td class="num">$45,654</td><td class="num">$38,596</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== FLEET EXPENSES ====== -->
+<div class="tab-panel" id="tab-expenses">
+
+  <div class="section-header">
+    <h2>Fleet Expenses — YOY Comparison</h2>
+    <div class="section-line"></div>
+    <div class="section-badge">Source: FEXA WO System</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">All Expense Line Items <span class="sub">YTD March 2026 (Q1)</span></div>
+    <table>
+      <thead>
+        <tr><th>Category</th><th class="num">2026 YTD</th><th class="num">2025 YTD</th><th class="num">$ Change</th><th class="num">% Change</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Banding &amp; Strapping</td><td class="num">$268,392</td><td class="num">$287,961</td><td class="num delta-pos">($19,569)</td><td class="num"><span class="badge pos">-6.8%</span></td></tr>
+        <tr><td>Compliance &amp; Legalization</td><td class="num">$290,948</td><td class="num">$342,400</td><td class="num delta-pos">($51,452)</td><td class="num"><span class="badge pos">-15.0%</span></td></tr>
+        <tr><td>Lease Forklift</td><td class="num">$109,400</td><td class="num">$208,348</td><td class="num delta-pos">($98,948)</td><td class="num"><span class="badge pos">-47.5%</span></td></tr>
+        <tr><td>Lease HD Truck</td><td class="num">$58,323</td><td class="num">$60,323</td><td class="num delta-pos">($2,000)</td><td class="num"><span class="badge pos">-3.3%</span></td></tr>
+        <tr><td>Rental Forklift</td><td class="num">$46,557</td><td class="num">$81,804</td><td class="num delta-pos">($35,247)</td><td class="num"><span class="badge pos">-43.1%</span></td></tr>
+        <tr class="warn-row"><td>Rental Truck ⚠</td><td class="num">$122,505</td><td class="num">$115,881</td><td class="num delta-neg">+$6,624</td><td class="num"><span class="badge warn">+5.7%</span></td></tr>
+        <tr class="warn-row"><td>Repair &amp; Tires — Forklift ⚠</td><td class="num">$1,218,307</td><td class="num">$1,180,018</td><td class="num delta-neg">+$38,289</td><td class="num"><span class="badge warn">+3.2%</span></td></tr>
+        <tr class="warn-row"><td>Repair &amp; Tires — Trailer ⚠</td><td class="num">$355,499</td><td class="num">$322,439</td><td class="num delta-neg">+$33,060</td><td class="num"><span class="badge warn">+10.3%</span></td></tr>
+        <tr><td>Repair &amp; Tires — Truck</td><td class="num">$1,251,433</td><td class="num">$1,318,291</td><td class="num delta-pos">($66,858)</td><td class="num"><span class="badge pos">-5.1%</span></td></tr>
+        <tr class="warn-row"><td>PM Forklift ⚠</td><td class="num">$158,449</td><td class="num">$141,037</td><td class="num delta-neg">+$17,412</td><td class="num"><span class="badge warn">+12.3%</span></td></tr>
+        <tr><td>PM Trailer</td><td class="num">$34,280</td><td class="num">$50,127</td><td class="num delta-pos">($15,847)</td><td class="num"><span class="badge pos">-31.6%</span></td></tr>
+        <tr><td>PM Truck</td><td class="num">$245,124</td><td class="num">$269,764</td><td class="num delta-pos">($24,641)</td><td class="num"><span class="badge pos">-9.1%</span></td></tr>
+        <tr class="warn-row"><td>Telematics ⚠</td><td class="num">$48,810</td><td class="num">$39,531</td><td class="num delta-neg">+$9,279</td><td class="num"><span class="badge warn">+23.5%</span></td></tr>
+        <tr class="total-row">
+          <td>Fleet Expenses Total (All Assets)</td>
+          <td class="num">$4,208,027</td><td class="num">$4,417,925</td>
+          <td class="num">($209,898)</td>
+          <td class="num"><span style="color:var(--yellow);font-weight:800;font-size:15px;">-4.8%</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout" style="margin:14px 0;">
+    <strong>Trend Alert — Savings Narrowing:</strong> The YOY advantage has compressed significantly: January was -22.0%, February narrowed to -6.8% YTD, and March closes Q1 at -4.8%. R&T Forklift and R&T Trailer have flipped positive. R&T Truck remains favorable but watch closely in Q2.
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">Fuel Spend YOY</div>
+      <table>
+        <thead><tr><th>Category</th><th class="num">2026 YTD</th><th class="num">2025 YTD</th><th class="num">Change</th></tr></thead>
+        <tbody>
+          <tr><td>Fuel — Forklift</td><td class="num">$213,756</td><td class="num">$245,892</td><td class="num"><span class="badge pos">-13.1%</span></td></tr>
+          <tr class="warn-row"><td>Fuel — HD &amp; LD Vehicles ⚠</td><td class="num">$1,890,335</td><td class="num">$1,850,288</td><td class="num"><span class="badge warn">+2.2%</span></td></tr>
+          <tr class="total-row"><td>Total Fuel</td><td class="num">$2,104,091</td><td class="num">$2,096,180</td><td class="num">+0.4%</td></tr>
+        </tbody>
+      </table>
+      <div class="callout alert" style="margin:12px;">
+        <strong>Fuel flipped unfavorable in March.</strong> Price per gallon surged to $3.82 YTD vs $3.27 in 2025 (+16.8%). Volume efficiency is improving (6.81 vs 6.71 MPG), but it can't offset the price spike.
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">Depreciation Expense</div>
+      <table>
+        <thead><tr><th>Month</th><th class="num">2026</th><th class="num">2025</th><th class="num">Change</th></tr></thead>
+        <tbody>
+          <tr><td>January</td><td class="num">$1,145,237</td><td class="num">$1,192,591</td><td class="num"><span class="badge pos">-4.0%</span></td></tr>
+          <tr><td>February</td><td class="num">$1,145,515</td><td class="num">$1,191,369</td><td class="num"><span class="badge pos">-3.9%</span></td></tr>
+          <tr><td>March</td><td class="num">$1,148,156</td><td class="num">$1,193,925</td><td class="num"><span class="badge pos">-3.8%</span></td></tr>
+          <tr class="total-row"><td>Q1 YTD Total</td><td class="num">$3,438,908</td><td class="num">$3,577,885</td><td class="num">-3.9%</td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin:12px;">Depreciation consistent and favorable all three months. Reduced fleet size driving steady savings of ~$46K/month vs 2025.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== FUEL & MILES ====== -->
+<div class="tab-panel" id="tab-fuel">
+
+  <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(185px,1fr));">
+    <div class="kpi-card">
+      <div class="kpi-label">YTD Miles Driven</div>
+      <div class="kpi-value">3,331,630</div>
+      <div class="kpi-delta pos">▼ 4.4% vs 2025 (3,483,591)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">March Miles</div>
+      <div class="kpi-value">1,187,706</div>
+      <div class="kpi-delta pos">▼ vs 2025 (1,272,343)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Fuel Efficiency</div>
+      <div class="kpi-value">6.81 MPG</div>
+      <div class="kpi-delta pos">▲ +1.5% vs 2025 (6.71)</div>
+    </div>
+    <div class="kpi-card warn">
+      <div class="kpi-label">Avg Fuel Cost / Gal</div>
+      <div class="kpi-value">$3.82</div>
+      <div class="kpi-delta warn">▲ +$0.55 vs 2025 ($3.27) ⚠</div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <h2>Monthly Miles — Historical</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">Jan–Mar Miles Driven by Year (2017–2026)</div>
+    <div class="chart-wrap" style="padding:20px;"><canvas id="chartMiles" style="max-height:280px;"></canvas></div>
+  </div>
+
+  <div class="two-col" style="margin-top:14px;">
+    <div class="panel">
+      <div class="panel-header">Fuel Efficiency — On-Road Vehicles</div>
+      <table>
+        <thead><tr><th>Metric</th><th class="num">2026</th><th class="num">2025</th><th class="num">YOY</th></tr></thead>
+        <tbody>
+          <tr><td>MPG (Average)</td><td class="num">6.81</td><td class="num">6.71</td><td class="num"><span class="badge pos">+1.5%</span></td></tr>
+          <tr><td>Gallons Consumed (est.)</td><td class="num">489,183</td><td class="num">519,383</td><td class="num"><span class="badge pos">-5.8%</span></td></tr>
+          <tr><td>Avg Cost per Gallon</td><td class="num">$3.82</td><td class="num">$3.27</td><td class="num"><span class="badge neg">+16.8% ⚠</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <div class="panel-header">Cost Per Mile — Truck Maintenance</div>
+      <table>
+        <thead><tr><th>Metric</th><th class="num">2026</th><th class="num">2025</th><th class="num">YOY</th></tr></thead>
+        <tbody>
+          <tr><td>Cost Per Mile</td><td class="num">$0.449</td><td class="num">$0.456</td><td class="num"><span class="badge pos">-1.5%</span></td></tr>
+          <tr><td>YTD Miles Driven</td><td class="num">3,331,630</td><td class="num">3,483,591</td><td class="num"><span class="badge neu">-4.4%</span></td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin:12px;">CPM returned to a slight favorable position (-1.5%) in March after being unfavorable in February (+2.0%). Continued improvement needed to re-establish the January baseline (-21.7%).</div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <h2>Monthly Fuel — March Detail</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">Monthly Fuel Spend — 2026 vs 2025</div>
+    <table>
+      <thead><tr><th>Month</th><th class="num">2026 Fuel</th><th class="num">2025 Fuel</th><th class="num">$ Change</th><th class="num">% Chg</th></tr></thead>
+      <tbody>
+        <tr><td>January</td><td class="num">$581,368</td><td class="num">$657,013</td><td class="num delta-pos">($75,645)</td><td class="num"><span class="badge pos">-11.5%</span></td></tr>
+        <tr><td>February</td><td class="num">$599,723</td><td class="num">$682,167</td><td class="num delta-pos">($82,444)</td><td class="num"><span class="badge pos">-12.1%</span></td></tr>
+        <tr class="warn-row"><td>March ⚠</td><td class="num">$923,000</td><td class="num">$757,000</td><td class="num delta-neg">+$166,000</td><td class="num"><span class="badge neg">+21.9%</span></td></tr>
+        <tr class="total-row"><td>Q1 YTD</td><td class="num">$2,104,091</td><td class="num">$2,096,180</td><td class="num">+$7,911</td><td class="num"><span style="color:var(--yellow);font-weight:800;">+0.4%</span></td></tr>
+      </tbody>
+    </table>
+    <div class="callout alert" style="margin:12px;">
+      <strong>March drove the full fuel reversal.</strong> January and February were tracking well below 2025, but March's ~$166K overage flipped the full quarter to essentially flat. The combination of higher miles in March (1.19M vs prior months) and the fuel price spike caused this concentration of cost.
+    </div>
+  </div>
+</div>
+
+<!-- ====== CAPEX & ASSETS ====== -->
+<div class="tab-panel" id="tab-capex">
+
+  <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(185px,1fr));">
+    <div class="kpi-card">
+      <div class="kpi-label">Total 2026 Budget</div>
+      <div class="kpi-value">$3.464M</div>
+      <div class="kpi-delta"><span class="sub">Add + Lifecycle Plan</span></div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-label">YTD CAPEX Spend</div>
+      <div class="kpi-value">$2.374M</div>
+      <div class="kpi-delta warn">▲ +$2.041M in March <span class="sub">major delivery month</span></div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-label">Budget Utilized YTD</div>
+      <div class="kpi-value">68.5%</div>
+      <div class="kpi-delta warn">▲ of $3.464M plan <span class="sub">after March deliveries</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Assets Delivered YTD</div>
+      <div class="kpi-value">48 Units</div>
+      <div class="kpi-delta pos">▲ +43 in March <span class="sub">40 Forklifts + 2 Ancillary + 1 Truck</span></div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <h2>CAPEX Delivery Schedule</h2>
+    <div class="section-line"></div>
+    <div class="section-badge">2026 Full-Year Plan</div>
+  </div>
+
+  <div class="panel" style="margin-bottom:14px;">
+    <div class="panel-header">Monthly CAPEX — 2026 Tracking</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th><th class="num">CAPEX Spend</th><th class="num">Forklift</th>
+          <th class="num">LD Vehicle</th><th class="num">TMFL</th>
+          <th class="num">Trailers</th><th class="num">Ancillary</th><th class="num">Truck Purchase</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="highlight-row">
+          <td><strong>January ✓</strong></td>
+          <td class="num">$165,769</td>
+          <td class="num" style="color:var(--text-light);">—</td><td class="num" style="color:var(--text-light);">—</td>
+          <td class="num" style="color:var(--text-light);">—</td><td class="num" style="color:var(--text-light);">—</td>
+          <td class="num" style="color:var(--text-light);">—</td>
+          <td class="num" style="color:var(--positive);font-weight:700;">1 unit</td>
+        </tr>
+        <tr class="highlight-row">
+          <td><strong>February ✓</strong></td>
+          <td class="num">$167,442</td>
+          <td class="num" style="color:var(--text-light);">—</td><td class="num" style="color:var(--text-light);">—</td>
+          <td class="num" style="color:var(--text-light);">—</td><td class="num" style="color:var(--text-light);">—</td>
+          <td class="num" style="color:var(--positive);font-weight:700;">3 units</td>
+          <td class="num" style="color:var(--positive);font-weight:700;">1 unit</td>
+        </tr>
+        <tr class="highlight-row">
+          <td><strong>March ✓ 🏆</strong></td>
+          <td class="num">$2,040,795</td>
+          <td class="num" style="color:var(--positive);font-weight:700;">40 units</td>
+          <td class="num" style="color:var(--text-light);">—</td>
+          <td class="num" style="color:var(--text-light);">—</td><td class="num" style="color:var(--text-light);">—</td>
+          <td class="num" style="color:var(--positive);font-weight:700;">2 units</td>
+          <td class="num" style="color:var(--positive);font-weight:700;">1 unit</td>
+        </tr>
+        <tr><td style="color:var(--text-muted);">April — December</td><td colspan="7" class="num" style="color:var(--text-light);text-align:center;font-style:italic;">Scheduled deliveries pending</td></tr>
+        <tr class="total-row">
+          <td>YTD Total (Q1)</td>
+          <td class="num">$2,374,006</td>
+          <td class="num">40 units</td><td class="num">0</td><td class="num">0</td><td class="num">0</td>
+          <td class="num">5 units</td><td class="num">3 units</td>
+        </tr>
+        <tr style="background:var(--gray-50);">
+          <td style="color:var(--text-muted);">Full Year Budget</td>
+          <td class="num" style="font-family:'Barlow Condensed';font-size:15px;font-weight:800;color:var(--green);">$3,464,000</td>
+          <td colspan="6" class="num" style="color:var(--text-light);">—</td>
+        </tr>
+        <tr style="background:var(--gray-50);">
+          <td style="color:var(--text-muted);">Remaining Budget</td>
+          <td class="num" style="font-family:'Barlow Condensed';font-size:15px;font-weight:800;color:var(--warn);">$1,089,994</td>
+          <td colspan="6" class="num" style="color:var(--text-light);">—</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout" style="margin:12px;">
+      <strong>68.5% of the full-year CAPEX budget was deployed in Q1.</strong> March alone accounted for $2.04M — primarily 40 forklift units. Only $1.09M remains for Q2–Q4 deliveries.
+    </div>
+  </div>
+
+  <div class="section-header">
+    <h2>Fleet Asset Count</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">Asset Mix — March 2026 (est.)</div>
+      <div class="chart-wrap"><canvas id="chartAssets"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">Asset Count YTD Avg — 2026 vs 2025</div>
+      <table>
+        <thead><tr><th>Asset Type</th><th class="num">2026 Avg</th><th class="num">2025 Avg</th><th class="num">Diff</th></tr></thead>
+        <tbody>
+          <tr><td>Forklift</td><td class="num">527.0</td><td class="num">559.5</td><td class="num delta-neg">-32.5</td></tr>
+          <tr><td>TMFL</td><td class="num">225.7</td><td class="num">241.0</td><td class="num delta-neg">-15.3</td></tr>
+          <tr><td>LD Vehicle</td><td class="num">111.3</td><td class="num">119.0</td><td class="num delta-neg">-7.7</td></tr>
+          <tr><td>Trailer</td><td class="num">240.0</td><td class="num">268.0</td><td class="num delta-neg">-28.0</td></tr>
+          <tr><td>Truck</td><td class="num">410.0</td><td class="num">442.1</td><td class="num delta-neg">-32.1</td></tr>
+          <tr class="total-row"><td>Total Fleet</td><td class="num">1,514</td><td class="num">~1,630</td><td class="num">-116</td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin:12px;">Current active count is <strong>1,512</strong>. The March forklift deliveries (40 units) will begin increasing the active count heading into Q2, which will impact both depreciation and repair baselines.</div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <h2>Repair Cost Per Asset — New Q1 Metric</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">Monthly Repair Cost Per Asset — 2026 vs 2025</div>
+    <table>
+      <thead><tr><th>Asset Type</th><th class="num">2026 $/Asset/Mo</th><th class="num">2025 $/Asset/Mo</th><th class="num">Change</th></tr></thead>
+      <tbody>
+        <tr class="warn-row"><td>Forklift ⚠</td><td class="num">$575.50</td><td class="num">$530.89</td><td class="num"><span class="badge warn">+8.4%</span></td></tr>
+        <tr class="warn-row"><td>TMFL ⚠</td><td class="num">$455.60</td><td class="num">$399.61</td><td class="num"><span class="badge warn">+14.0%</span></td></tr>
+        <tr class="warn-row"><td>Trailer ⚠</td><td class="num">$493.75</td><td class="num">$401.04</td><td class="num"><span class="badge warn">+23.1%</span></td></tr>
+        <tr><td>Truck</td><td class="num">$1,017.43</td><td class="num">$994.00</td><td class="num"><span class="badge warn">+2.4%</span></td></tr>
+      </tbody>
+    </table>
+    <div class="callout alert" style="margin:12px;">
+      <strong>All asset types are running higher repair cost per asset vs 2025.</strong> Trailer (+23.1%) and TMFL (+14.0%) are the most elevated. This metric explains why absolute repair savings are narrowing despite the fleet being ~116 units smaller.
+    </div>
+  </div>
+</div>
+
+<!-- ====== HISTORICAL ====== -->
+<div class="tab-panel" id="tab-history">
+
+  <div class="section-header">
+    <h2>Historical Spend — Jan–Mar YTD by Year</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="panel" style="margin-bottom:14px;">
+    <div class="panel-header">Total Fleet Invoices — Q1 YTD (2014–2026)</div>
+    <div class="chart-wrap" style="padding:20px;"><canvas id="chartHistoric" style="max-height:280px;"></canvas></div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">Q1 (Jan–Mar) Spend by Year</div>
+      <table>
+        <thead><tr><th>Year</th><th class="num">Q1 Total</th><th class="num">Transactions</th><th class="num">Avg / TX</th></tr></thead>
+        <tbody>
+          <tr><td>2014</td><td class="num">$4,907,080</td><td class="num">2,882</td><td class="num">$1,703</td></tr>
+          <tr><td>2015</td><td class="num">$4,216,444</td><td class="num">2,888</td><td class="num">$1,460</td></tr>
+          <tr><td>2016</td><td class="num">$12,878,794</td><td class="num">2,443</td><td class="num">$5,272</td></tr>
+          <tr><td>2017</td><td class="num">$4,555,974</td><td class="num">2,674</td><td class="num">$1,704</td></tr>
+          <tr><td>2018</td><td class="num">$9,184,871</td><td class="num">3,068</td><td class="num">$2,994</td></tr>
+          <tr><td>2019</td><td class="num">$5,900,163</td><td class="num">3,336</td><td class="num">$1,769</td></tr>
+          <tr><td>2020</td><td class="num">$5,519,474</td><td class="num">3,171</td><td class="num">$1,741</td></tr>
+          <tr><td>2021</td><td class="num">$4,906,344</td><td class="num">3,262</td><td class="num">$1,504</td></tr>
+          <tr><td>2022</td><td class="num">$5,690,974</td><td class="num">3,474</td><td class="num">$1,638</td></tr>
+          <tr><td>2023</td><td class="num">$7,846,572</td><td class="num">3,726</td><td class="num">$2,106</td></tr>
+          <tr><td>2024</td><td class="num">$16,234,704</td><td class="num">4,565</td><td class="num">$3,556</td></tr>
+          <tr><td>2025</td><td class="num">$10,987,989</td><td class="num">4,305</td><td class="num">$2,552</td></tr>
+          <tr class="highlight-row"><td><strong>2026</strong></td><td class="num">$8,664,015</td><td class="num">3,899</td><td class="num">$2,222</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <div class="panel-header">Depreciation History — Q1 YTD</div>
+      <table>
+        <thead><tr><th>Year</th><th class="num">Jan</th><th class="num">Feb</th><th class="num">Mar</th><th class="num">Q1 Total</th></tr></thead>
+        <tbody>
+          <tr><td>2019</td><td class="num">$704K</td><td class="num">$719K</td><td class="num">$725K</td><td class="num">$2,148K</td></tr>
+          <tr><td>2020</td><td class="num">$590K</td><td class="num">$603K</td><td class="num">$415K</td><td class="num">$1,608K</td></tr>
+          <tr><td>2021</td><td class="num">$476K</td><td class="num">$480K</td><td class="num">$501K</td><td class="num">$1,457K</td></tr>
+          <tr><td>2022</td><td class="num">$582K</td><td class="num">$586K</td><td class="num">$614K</td><td class="num">$1,782K</td></tr>
+          <tr><td>2023</td><td class="num">$779K</td><td class="num">$779K</td><td class="num">$792K</td><td class="num">$2,350K</td></tr>
+          <tr><td>2024</td><td class="num">$859K</td><td class="num">$932K</td><td class="num">$973K</td><td class="num">$2,764K</td></tr>
+          <tr><td>2025</td><td class="num">$1,193K</td><td class="num">$1,191K</td><td class="num">$1,194K</td><td class="num">$3,578K</td></tr>
+          <tr class="highlight-row"><td><strong>2026</strong></td><td class="num">$1,145K</td><td class="num">$1,146K</td><td class="num">$1,148K</td><td class="num">$3,439K</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <span><strong>McCoy's Building Supply</strong> &nbsp;·&nbsp; Fleet Department</span>
+  <span>Data Source: FEXA WO Management System &nbsp;·&nbsp; YTD Through March 2026 (Q1) &nbsp;·&nbsp; Generated April 2026</span>
+</footer>
+
+<script>
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'fuel'    && !window.milesDone)  initMilesChart();
+  if (id === 'history' && !window.histDone)   initHistChart();
+  if (id === 'capex'   && !window.assetsDone) initAssetsChart();
+}
+
+const G  = '#1B4D2E';
+const GM = '#255f39';
+const GL = '#2d7346';
+const Y  = '#F5C300';
+const YD = '#c9a000';
+const W  = '#f59e0b';
+const GR = '#8f9185';
+
+const tip  = { backgroundColor: G, borderColor: Y, borderWidth: 1, titleColor: Y, bodyColor: '#fff', padding: 10 };
+const tick = { color: '#555750', font: { family: 'Barlow', size: 12 } };
+const grid = '#e8e9e4';
+
+// Expenses Donut
+new Chart(document.getElementById('chartExpenses'), {
+  type: 'doughnut',
+  data: {
+    labels: ['R&T Forklift','R&T Truck','R&T Trailer','Fuel HD/LD','PM Truck','PM Forklift','Compliance','Banding','Other'],
+    datasets: [{
+      data: [1218307, 1251433, 355499, 1890335, 245124, 158449, 290948, 268392, 529540],
+      backgroundColor: [W, G, YD, W, GL, W, Y, '#4a7c5e', GR],
+      borderColor: '#fff', borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true, cutout: '60%',
+    plugins: {
+      tooltip: tip,
+      legend: { position: 'right', labels: { color: '#555750', font: { family: 'Barlow', size: 11 }, boxWidth: 12, padding: 10 } }
+    }
+  }
+});
+
+// Depreciation Bar
+new Chart(document.getElementById('chartDeprec'), {
+  type: 'bar',
+  data: {
+    labels: ['2021','2022','2023','2024','2025','2026'],
+    datasets: [{
+      label: 'Q1 YTD Depreciation',
+      data: [1456453, 1782749, 2350208, 2764516, 3577885, 3438908],
+      backgroundColor: (ctx) => ctx.dataIndex === 5 ? Y : G,
+      borderRadius: 4
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: tip },
+    scales: {
+      x: { ticks: tick, grid: { color: grid } },
+      y: { ticks: { ...tick, callback: v => '$' + (v/1000000).toFixed(2) + 'M' }, grid: { color: grid } }
+    }
+  }
+});
+
+// Miles Chart
+function initMilesChart() {
+  window.milesDone = true;
+  new Chart(document.getElementById('chartMiles'), {
+    type: 'bar',
+    data: {
+      labels: ['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'],
+      datasets: [
+        { label: 'January',  data: [754388,804518,887017,881051,832809,941903,1060846,1097276,1103304,1030487], backgroundColor: G,  borderRadius: 2 },
+        { label: 'February', data: [753388,825282,822287,823614,641797,884932,985520,1181750,1107944,1113437],  backgroundColor: GL, borderRadius: 2 },
+        { label: 'March',    data: [859035,991480,847823,922862,1019231,1141249,1211778,1222957,1272343,1187706], backgroundColor: (ctx) => ctx.dataIndex === 9 ? Y : YD, borderRadius: 2 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { tooltip: tip, legend: { labels: { color: '#555750', font: { family: 'Barlow', size: 12 } } } },
+      scales: {
+        x: { stacked: false, ticks: tick, grid: { color: grid } },
+        y: { ticks: { ...tick, callback: v => (v/1000).toFixed(0) + 'K' }, grid: { color: grid } }
+      }
+    }
+  });
+}
+
+// Historical line
+function initHistChart() {
+  window.histDone = true;
+  new Chart(document.getElementById('chartHistoric'), {
+    type: 'line',
+    data: {
+      labels: ['2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'],
+      datasets: [{
+        label: 'Q1 YTD Fleet Spend',
+        data: [4907080,4216444,12878794,4555974,9184871,5900163,5519474,4906344,5690974,7846572,16234704,10987989,8664015],
+        borderColor: G, backgroundColor: 'rgba(27,77,46,0.08)',
+        tension: 0.3, fill: true,
+        pointBackgroundColor: (ctx) => ctx.dataIndex === 12 ? Y : G,
+        pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: tip },
+      scales: {
+        x: { ticks: tick, grid: { color: grid } },
+        y: { ticks: { ...tick, callback: v => '$' + (v/1000000).toFixed(1) + 'M' }, grid: { color: grid } }
+      }
+    }
+  });
+}
+
+// Assets Donut
+function initAssetsChart() {
+  window.assetsDone = true;
+  new Chart(document.getElementById('chartAssets'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Forklifts','TMFL','LD Vehicles','Trailers','Trucks'],
+      datasets: [{
+        data: [527, 226, 111, 240, 410],
+        backgroundColor: [G, Y, GM, GL, YD],
+        borderColor: '#fff', borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, cutout: '58%',
+      plugins: {
+        tooltip: tip,
+        legend: { position: 'right', labels: { color: '#555750', font: { family: 'Barlow', size: 12 }, boxWidth: 12 } }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
